@@ -12,14 +12,14 @@ uses
   System.Classes, System.Math,
   Vcl.Dialogs,
   Generics.Defaults, Generics.Collections,
-  Core.Utils, Core.Types, Core.Material, Core.Mesh, Core.Model, Core.ByteReader,
-  GSLoader, JTFormat, JTMesh;
+  Core.Utils, Core.Types, Core.Material, Core.Mesh, Core.Model, Core.ByteReader, Core.Loader,
+  JTFormat, JTMesh;
 
 const
   DefaultColor: TVector4 = (R:0.5; G:0.5; B:0.5; A:1.0);
 
 type
-  JTFile = class(GSFile)
+  JTFile = class(TCoreLoader)
   private
     EntryCount: Int32;
     TOCEntries: array of TTOCEntry;
