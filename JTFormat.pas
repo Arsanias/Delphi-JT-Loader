@@ -22,7 +22,8 @@ uses
   System.Classes, System.DateUtils, System.Math,
   Vcl.Dialogs,
   Generics.Defaults, Generics.Collections,
-  Core.Utils, Core.Types, Core.ByteReader, GSLoader, JTCodec;
+  Core.Utils, Core.Types, Core.ByteReader, Core.Loader,
+  JTCodec;
 
 const
   JT_BO_LITTLEENDIAN = 0;
@@ -41,7 +42,7 @@ type
     ObjectID: Cardinal;                                                         // which are constructed
     NodeType: TNodeType;                                                        // over "Loader" parameter
     ChildIndex: Integer; // for internal use --> tree view creation
-    constructor Create(Loader: GSFile); virtual; abstract;
+    constructor Create(Loader: TCoreLoader); virtual; abstract;
     function GetChildCount: Integer;
     function GetAttributeCount: Integer;
     function ToString: string;
@@ -71,7 +72,7 @@ type
     EmptyField: Integer;
     TOCOffset: Integer;
     LSGSegmentID: TGUID;
-    constructor Create(Loader: GSFile; var AVersion: Single);
+    constructor Create(Loader: TCoreLoader; var AVersion: Single);
   end;
 
   TQuantizationParameters = record
@@ -80,7 +81,7 @@ type
     NormalBitsFactor: Integer;
     BitsPerTextureCoord: Integer;
     BitsPerColor: Integer;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TUniformQuantizerData = record // v10.0-177
@@ -89,7 +90,7 @@ type
     Max: Single;
     NumBits: Integer;
     function GetRange: TRangeF;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     property Range: TRangeF read GetRange;
   end;
   TUniformQuantizerDataArray = array of TUniformQuantizerData;
@@ -98,7 +99,7 @@ type
     UFQDataX: TUniformQuantizerData;
     UFQDataY: TUniformQuantizerData;
     UFQDataZ: TUniformQuantizerData;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
   PPointQuantizerData = ^TPointQuantizerData;
 
@@ -107,24 +108,24 @@ type
     UniformQuantizerDataGreen: TUniformQuantizerData;
     UniformQuantizerDataBlue: TUniformQuantizerData;
     UniformQuantizerDataAlpha: TUniformQuantizerData;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TTextureQuantizerData = class
     UniformQuantizerDatas: TUniformQuantizerDataArray;
-    constructor Create(Loader: GSFile; numberComponents: Integer);
+    constructor Create(Loader: TCoreLoader; numberComponents: Integer);
   end;
 
   TCompressedVertexColorArray = class
     ColorValues: TList<Single>;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     destructor Destroy; override;
   end;
 
   TCompressedVertexFlagArray = class // v10.0-170
     VertexFlagCount: Integer;
     VertexFlags: TIntegerList;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     destructor Destroy; override;
   end;
 
@@ -137,11 +138,11 @@ type
     Normals: TSingleList;
     ColorArray: TCompressedVertexColorArray;
     FlagArray: TCompressedVertexFlagArray;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     destructor Destroy; override;
-    procedure DecodeCompressedVertexCoordinates(Loader: GSFile); // v9.5-267 // v10.0-164
-    procedure DecodeCompressedVertexTextureCoordinates(Loader: GSFile);
-    procedure DecodeCompressedVertexNormals(Loader: GSFile); // v9.5-268 // v10.0-165
+    procedure DecodeCompressedVertexCoordinates(Loader: TCoreLoader); // v9.5-267 // v10.0-164
+    procedure DecodeCompressedVertexTextureCoordinates(Loader: TCoreLoader);
+    procedure DecodeCompressedVertexNormals(Loader: TCoreLoader); // v9.5-268 // v10.0-165
   end;
 
   TTopologicallyCompressedRepData = class // v9.5-114 // v10.0-103
@@ -155,7 +156,7 @@ type
     SplitFacePositions: TIntegerList;
     Hash: Cardinal;
     TopologicallyCompressedVertexRecords: TTopologicallyCompressedVertexRecords;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     destructor Destroy; override;
     function CheckHash: Boolean;
   end;
@@ -163,18 +164,18 @@ type
   TTopoMeshLODData = class // v10.0-097
     VersionNumber: Int16;
     VertexRecordsObjectID: Integer;
-    constructor Create(Loader: GSFile); virtual;
+    constructor Create(Loader: TCoreLoader); virtual;
   end;
 
   TTopoMeshCompressedLODData = class(TTopoMeshLODData) // v9.5-113 // v10.0-097
     VersionNumber: Int16;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TTopoMeshTopologicallyCompressedLODData = class(TTopoMeshLODData) // v9.5-113 // v10.0-102
     VersionNumber: Int16;
     TopologicallyCompressedRepData: TTopologicallyCompressedRepData;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
     destructor Destroy; override;
   end;
 
@@ -183,15 +184,15 @@ type
     NormalBinding: UInt8;
     TextureCoordBinding: UInt8;
     ColorBinding: UInt8;
-    procedure LossyQuantizedRawVertexData(Loader: GSFile); // v8.1-237
-    procedure LosslessCompressedRawVertexData(Loader: GSFile); // v8.1-236
+    procedure LossyQuantizedRawVertexData(Loader: TCoreLoader); // v8.1-237
+    procedure LosslessCompressedRawVertexData(Loader: TCoreLoader); // v8.1-236
   public
     Vertices: TSingleList;
     Normals: TSingleList;
     Colors: TSingleList;
     TextureCoordinates: TSingleList;
     PrimitiveListIndices: TIntegerList;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     destructor Destroy; override;
   end;
 
@@ -200,7 +201,7 @@ type
     PointQuantizerData: TPointQuantizerData;
     VertexCount: Integer;
     Vertices: TSingleList;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TQuantizedVertexNormalArray = class // V81-239
@@ -211,7 +212,7 @@ type
      ThetaCodes: TIntegerList;
      PsiCodes: TIntegerList;
      Normals: TSingleList;
-     constructor Create(Loader: GSFile);
+     constructor Create(Loader: TCoreLoader);
   end;
 
   TQuantizedVertexColorArray = class // V81-242
@@ -225,12 +226,12 @@ type
     AlphaCodes: TIntegerList;
     ColorCodes: TIntegerList;
     Colors: TList<Single>;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TQuantizedVertexTextureCoordArray = class
     Textures: TList<Single>;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TElementHeader = record // v8.1-035 // v9.5-031 // v10.0-024
@@ -239,7 +240,7 @@ type
     ObjectBaseType: TObjectBaseType;
     ObjectId: Integer;
     SkipLength: Integer;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TLogicalElementHeaderZLib = class // v8.1-037 // v9.5-032 // v10.0-025
@@ -249,14 +250,14 @@ type
     CompressionFlag: Integer;
     CompressedDataLength: Integer;
     CompresionAlogirthm: TCompressionType;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TSegmentHeader = record // v8.1-033 // v9.5-029
     GUID: TGUID;
     SegmentType: TSegmentType;
     SegmentLength: Integer;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
   end;
 
   TTOCEntry = class // V81-031 // V95-028 // V10-020(032)
@@ -267,7 +268,7 @@ type
     SegmentOffset: Int64;
     SegmentLength: Integer;
     SegmentAttributes: Cardinal;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     property SegmentType: TSegmentType read GetSegmentType;
   end;
 
@@ -276,14 +277,14 @@ type
     NodeFlags: Cardinal;
     AttrCount: Integer;
     AttrObjectIDs: TIntegerDynArray;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TGroupNodeElement = class(TBaseNodeElement) // v8.1-044 // v9.5-039 // v10.0-033
     VersionNumber: Int16; // v9.5
     ChildCount: Integer;
     ChildNodeObjectIDs: TIntegerDynArray;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TPartitionNodeElement = class(TGroupNodeElement) // v8.1-041 // v9.5-036 // v10.0-030
@@ -297,44 +298,44 @@ type
     NodeCountRange: TRange;
     PolygonCountRange: TRange;
     UntransformedBox: TBoundingBox; // (PartitionFlags & $01) <> 0
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TInstanceNodeElement = class(TBaseNodeElement) // v8.1-045 // v9.5-039 // v10.0-034
     VersionNumber: Int16; // V9.5
     ChildNodeObjectID: Integer;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TMetaDataNodeElement = class(TGroupNodeElement) // v8.1-047 // v9.5-041 // v10.0-036
     VersionNumber: Int16;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TPartNodeElement = class(TMetaDataNodeElement) // v8.1-046 // v9.5-040 // v10.0-035
     VersionNumber: Int16;
     ReservedField: Integer;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TLODNodeElement = class(TGroupNodeElement) // v8.1-048 // v9.5-041 // v10.0-037
     VersionNumber: Int16; // v9.5 // v10.0
     ReservedVector: TSingleDynArray; // v8.1 // v9.5
     ReservedField: Integer; // v8.1 // v9.5
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TRangeLODNodeElement = class(TLODNodeElement) // v8.1-049 // v9.5-043 // v10.0-037
     VersionNumber: Int16; // v9.5 // v10.0
     RangeLimits: TSingleDynArray;
     Center: TVector3;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TSwitchNodeElement = class(TGroupNodeElement) // v8.1-50 // v9.5-043 // v10.0-038
     VersionNumber: Int16;
     SelectedChild: Integer;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TBaseShapeNodeElement = class(TBaseNodeElement) // v8.1-052 // v9.5-045 // v10.0-039
@@ -347,7 +348,7 @@ type
     PolygonCountRange: TRange;
     Size: Integer;
     CompressionLevel: Single;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TVertexShapeNodeElement = class(TBaseShapeNodeElement) // v8.1-055 // v9.5-048 // v10.0-042
@@ -357,25 +358,25 @@ type
     TextureCoordBinding: Integer;
     ColorBinding: Integer;
     QuantizationParams: TQuantizationParameters;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TTriStripSetShapeNodeElement = class(TVertexShapeNodeElement) // v8.1-058 // v9.5-049
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TPolylineSetShapeNodeElement = class(TVertexShapeNodeElement) // v8.1-058 // v9.5-049 // v10.0-043
     VersionNumber: Int16; // v9.5 // v10.0
     AreaFactor: Single;
     VertexBindings: Int64; // v9.5
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TPointSetShapeNodeElement = class(TVertexShapeNodeElement) // V8.1-059 // V9.5-050 // v10.0-044
     VersionNumber: Int16; // v9.5 // v10.0
     AreaFactor: Single;
     VertexBindings: Int64; // v9.5 // v10.0
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TBaseAttributeElement = class(TBaseElement) // v8.1-065 // v9.5-055 // v10.0-049
@@ -383,7 +384,7 @@ type
     StateFlags: Byte;
     FieldInhibitFlags: Cardinal;
     FieldFinalFlags: Cardinal; // v10.0
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TMaterialAttributeElement = class(TBaseAttributeElement) // v8.1-066 // v9.5-061 // v10.0-050
@@ -396,49 +397,49 @@ type
     Shineniness: Single;
     Reflectivity: Single; // v9.5
     Bumpiness: Single; // v10.0
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TGeometricTransformAttributeElement = class(TBaseAttributeElement) // v8.1
     VersionNumber: Integer;
     ElementValues: array[0..15] of Double;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TBasePropertyAtomElement = class(TBaseElement) // v8.1-110 // v9.5-101 // v10.0-083
     VersionNumber: Int16; // v9.5 // v10.0
     StateFlags: Cardinal;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TStringPropertyAtomElement = class(TBasePropertyAtomElement) // v8.1-111 // v9.5-101 // v10.0-084
     VersionNumber: Int16; // v9.5 // v10.0
     Value: string;   
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TIntegerPropertyAtomElement = class(TBasePropertyAtomElement) // v8.1-111 // v9.5-102
     VersionNumber: Int16; // v9.5
     Value: Integer;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TFloatingPointPropertyAtomElement = class(TBasePropertyAtomElement) // v8.1-112 // v9.5-103
     VersionNumber: Int16; // v9.5
     Value: Single;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TObjectReferencePropertyAtomElement = class(TBasePropertyAtomElement) // v8.1-113 // v9.5-103
     VersionNumber: Int16; // v9.5
     ReferenceID: Integer;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TDatePropertyAtomElement = class(TBasePropertyAtomElement) // v8.1-113 // v9.5-104 // v10.0-086
     VersionNumber: Int16; // v9.5 // v10.0
     Date: TDateTime;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TLateLoadedPropertyAtomElement = class(TBasePropertyAtomElement) // v8.1-115 // v9.5-106 // v10.0-088 // v10.5-105
@@ -447,7 +448,7 @@ type
     SegmentType: TSegmentType;
     PayloadObjectID: Integer; // v9.5 // v10.0
     Reserved: Integer; // v9.5 // v10.0??
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   PNodePropertyTable = ^TNodePropertyTable;
@@ -465,13 +466,13 @@ type
     VersionNumber: Int16;
     NodePropertyTableCount: Integer;
     NodePropertyTables: array of TNodePropertyTableList;
-    constructor Create(Loader: GSFile);
+    constructor Create(Loader: TCoreLoader);
     destructor Destroy; override;
   end;
 
   TBaseShapeLODElement = class(TBaseElement) // v8.1-XXX // v9.5-109 // v10.0-097(109)
     VersionNumber: Int16;
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
   end;
 
   TVertexShapeLODElement = class(TBaseShapeLODElement) // v8.1-118 // v9.5-110 // v10.0-095
@@ -480,20 +481,20 @@ type
     QuantizationParameters: TQuantizationParameters; // v8.1
     TopoMeshCompressedLODData: TTopoMeshCompressedLODData; // v9.5
     TopoMeshTopologicallyCompressedLODData: TTopoMeshTopologicallyCompressedLODData; // v9.5
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
     destructor Destroy; override;
   end;
 
   TTriStripSetShapeLODElement = class(TVertexShapeLODElement) // v8.1-120 // v95-124 // v10.0-092
     VersionNumber: Int16;
     VtexBasedShapeComprRepData: TVertexBasedShapeCompressedRepData; // v8.1
-    constructor Create(Loader: GSFile); override;
+    constructor Create(Loader: TCoreLoader); override;
     destructor Destroy; override;
   end;
 
   TPolyLineSetShapeLODElement = class(TVertexShapeLODElement)
     VersionNumber: Int16;
-    constructor Create(Loader: GSFile); override; 
+    constructor Create(Loader: TCoreLoader); override;
     destructor Destroy; override;
   end;
 
@@ -531,7 +532,7 @@ type
     SegmentHeader: TSegmentHeader;
     ElementHeader: TElementHeader;
     class function GetClassByObjectTypeId(const AObjectTypeId: TGUID; var ABaseElementClass: TBaseElementClass): Boolean;
-    constructor Create(Loader: GSFile; Offset: Int64); virtual;
+    constructor Create(Loader: TCoreLoader; Offset: Int64); virtual;
     function SupportsZLib: Boolean;
   end;
 
@@ -542,7 +543,7 @@ type
     PropertyStartIndex: Integer;
     function GetPropertyValue(ANodeObjectID: Integer; ACode: string): Variant;
     function GetLateLoadedSegmentID(ANodeObjectID: Integer; ACode: string; var AGUID: TGUID): Boolean;
-    constructor Create(Loader: GSFile; Offset: Int64); override;
+    constructor Create(Loader: TCoreLoader; Offset: Int64); override;
     destructor Destroy; override;
     function FindElement(AObjectID: Cardinal; var AElement: TBaseElement): Boolean;
   end;
@@ -550,7 +551,7 @@ type
   TShapeLODSegment = class(TDataSegment) // v8.1-117 // v9.5-110 // v10.0-092
   public                     
     Element: TBaseShapeLODElement;
-    constructor Create(Loader: GSFile; Offset: Int64); override;
+    constructor Create(Loader: TCoreLoader; Offset: Int64); override;
     destructor Destroy; override;
   end;
 
@@ -561,7 +562,7 @@ var
 
 //==============================================================================
 
-constructor TQuantizationParameters.Create(Loader: GSFile);
+constructor TQuantizationParameters.Create(Loader: TCoreLoader);
 begin
   BitsPerVertex := Loader.Read8;
   NormalBitsFactor := Loader.Read8;
@@ -571,7 +572,7 @@ end;
 
 //==============================================================================
 
-constructor TUniformQuantizerData.Create(Loader: GSFile);
+constructor TUniformQuantizerData.Create(Loader: TCoreLoader);
 begin
   Min := Loader.ReadF32;
   Max := Loader.ReadF32;
@@ -589,7 +590,7 @@ end;
 
 //==============================================================================
 
-constructor TPointQuantizerData.Create(Loader: GSFile);
+constructor TPointQuantizerData.Create(Loader: TCoreLoader);
 begin
   UFQDataX := TUniformQuantizerData.Create(Loader);
   UFQDataY := TUniformQuantizerData.Create(Loader);
@@ -602,7 +603,7 @@ end;
 
 //==============================================================================
 
-constructor TColorQuantizerData.Create(Loader: GSFile);
+constructor TColorQuantizerData.Create(Loader: TCoreLoader);
 var
   NumberOfHueBits: Integer;
   NumberOfSaturationBits: Integer;
@@ -632,7 +633,7 @@ end;
 
 //==============================================================================
 
-constructor TCompressedVertexColorArray.Create(Loader: GSFile);
+constructor TCompressedVertexColorArray.Create(Loader: TCoreLoader);
 var
   colorCount: Integer;
   NumComponents: Integer;
@@ -728,7 +729,7 @@ end;
 
 //==============================================================================
 
-constructor TTextureQuantizerData.Create(Loader: GSFile; NumberComponents: Integer);
+constructor TTextureQuantizerData.Create(Loader: TCoreLoader; NumberComponents: Integer);
 var
   i: Integer;
   UniformQuantizerDatas: TUniformQuantizerDataArray;
@@ -741,7 +742,7 @@ end;
 
 //==============================================================================
 
-constructor TCompressedVertexFlagArray.Create(Loader: GSFile);
+constructor TCompressedVertexFlagArray.Create(Loader: TCoreLoader);
 begin
   VertexFlagCount := Loader.Read32;
   VertexFlags := TIntCDP.ReadVecI32(Loader, TPredictorType.ptPredNULL);
@@ -755,7 +756,7 @@ end;
 
 //==============================================================================
 
-constructor TTopologicallyCompressedVertexRecords.Create(Loader: GSFile);
+constructor TTopologicallyCompressedVertexRecords.Create(Loader: TCoreLoader);
 var
   VertexBindings: Int64;
   QuantizationParameters: TQuantizationParameters;
@@ -804,7 +805,7 @@ begin
   inherited;
 end;
 
-procedure TTopologicallyCompressedVertexRecords.DecodeCompressedVertexCoordinates(Loader: GSFile);
+procedure TTopologicallyCompressedVertexRecords.DecodeCompressedVertexCoordinates(Loader: TCoreLoader);
 var
   AExponents: TIntegerList;
   AMantissae: TIntegerList;
@@ -936,7 +937,7 @@ begin
   end;
 end;
 
-procedure TTopologicallyCompressedVertexRecords.DecodeCompressedVertexNormals(Loader: GSFile);
+procedure TTopologicallyCompressedVertexRecords.DecodeCompressedVertexNormals(Loader: TCoreLoader);
 var
   NormalCount: Integer;
   NumberComponents: Byte;
@@ -1057,7 +1058,7 @@ begin
   SafeFree(DeeringNormalCodes);
 end;
 
-procedure TTopologicallyCompressedVertexRecords.DecodeCompressedVertexTextureCoordinates(Loader: GSFile);
+procedure TTopologicallyCompressedVertexRecords.DecodeCompressedVertexTextureCoordinates(Loader: TCoreLoader);
 var
   AExponents: TIntegerList;
   AMantissae: TIntegerList;
@@ -1144,7 +1145,7 @@ end;
 
 //==============================================================================
 
-constructor TTopoMeshLODData.Create(Loader: GSFile);
+constructor TTopoMeshLODData.Create(Loader: TCoreLoader);
 begin
   if ((Loader.FileVersion >= 8.0) and (Loader.FileVersion < 10.0)) then
     VersionNumber := Loader.Read16
@@ -1157,7 +1158,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TTopoMeshCompressedLODData.Create(Loader: GSFile);
+constructor TTopoMeshCompressedLODData.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1170,7 +1171,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TTopoMeshTopologicallyCompressedLODData.Create(Loader: GSFile);
+constructor TTopoMeshTopologicallyCompressedLODData.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1196,7 +1197,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TTopologicallyCompressedRepData.Create(Loader: GSFile);
+constructor TTopologicallyCompressedRepData.Create(Loader: TCoreLoader);
 var
   i, j: Integer;
   AFaceAttrMaskList: TIntegerList;
@@ -1380,7 +1381,7 @@ end;
 
 //==============================================================================
 
-constructor TQuantizedVertexCoordArray.Create(Loader: GSFile);
+constructor TQuantizedVertexCoordArray.Create(Loader: TCoreLoader);
 var
   XVertexCoords: TIntegerList;
   YVertexCoords: TIntegerList;
@@ -1395,9 +1396,9 @@ begin
   YVertexCoords := TIntCDP.ReadVecI32(Loader, TPredictorType.ptPredLag1);
   ZVertexCoords := TIntCDP.ReadVecI32(Loader, TPredictorType.ptPredLag1);
 
-  List1 := GSFile.Dequantize(XVertexCoords, PointQuantizerData.UFQDataX.Range, PointQuantizerData.UFQDataX.NumBits);
-  List2 := GSFile.Dequantize(YVertexCoords, PointQuantizerData.UFQDataY.Range, PointQuantizerData.UFQDataY.NumBits);
-  List3 := GSFile.Dequantize(ZVertexCoords, PointQuantizerData.UFQDataZ.Range, PointQuantizerData.UFQDataZ.NumBits);
+  List1 := TCoreLoader.Dequantize(XVertexCoords, PointQuantizerData.UFQDataX.Range, PointQuantizerData.UFQDataX.NumBits);
+  List2 := TCoreLoader.Dequantize(YVertexCoords, PointQuantizerData.UFQDataY.Range, PointQuantizerData.UFQDataY.NumBits);
+  List3 := TCoreLoader.Dequantize(ZVertexCoords, PointQuantizerData.UFQDataZ.Range, PointQuantizerData.UFQDataZ.NumBits);
 
   Vertices := CreateSingleList(VertexCount * 3);
   for i := 0 to VertexCount - 1 do
@@ -1417,7 +1418,7 @@ end;
 
 //==============================================================================
 
-constructor TQuantizedVertexNormalArray.Create(Loader: GSFile);
+constructor TQuantizedVertexNormalArray.Create(Loader: TCoreLoader);
 var
   i: Integer;
   P: TPoint3D;
@@ -1447,7 +1448,7 @@ end;
 
 //==============================================================================
 
-constructor TQuantizedVertexColorArray.Create(Loader: GSFile);
+constructor TQuantizedVertexColorArray.Create(Loader: TCoreLoader);
 begin
   ColorQuantizerData := TPointQuantizerData.Create(Loader);
   NumberOfBits := Loader.Read8;
@@ -1467,14 +1468,14 @@ end;
 
 //==============================================================================
 
-constructor TQuantizedVertexTextureCoordArray.Create(Loader: GSFile);
+constructor TQuantizedVertexTextureCoordArray.Create(Loader: TCoreLoader);
 begin
   raise Exception.Create('TQuantizedVertexTextureCoordArray : Create'#13 + 'This function is not implemented yet');
 end;
 
 //==============================================================================
 
-constructor TVertexBasedShapeCompressedRepData.Create(Loader: GSFile);
+constructor TVertexBasedShapeCompressedRepData.Create(Loader: TCoreLoader);
 var
   AVersionNumber: Int16;
   AQuantParams: TQuantizationParameters;
@@ -1513,7 +1514,7 @@ begin
   inherited;
 end;
 
-procedure TVertexBasedShapeCompressedRepData.LosslessCompressedRawVertexData(Loader: GSFile);
+procedure TVertexBasedShapeCompressedRepData.LosslessCompressedRawVertexData(Loader: TCoreLoader);
 const
   BINDING_NONE          = 0;
   BINDING_PER_VERTEX    = 1;
@@ -1585,7 +1586,7 @@ begin
   end;
 end;
 
-procedure TVertexBasedShapeCompressedRepData.LossyQuantizedRawVertexData(Loader: GSFile);
+procedure TVertexBasedShapeCompressedRepData.LossyQuantizedRawVertexData(Loader: TCoreLoader);
 var
   i: Integer;
   AQuantizedVertices: TQuantizedVertexCoordArray;
@@ -1653,7 +1654,7 @@ end;
 
 //==============================================================================
 
-constructor TSegmentHeader.Create(Loader: GSFile);
+constructor TSegmentHeader.Create(Loader: TCoreLoader);
 begin
   GUID := Loader.ReadGUID;
   SegmentType := TSegmentType(Loader.Read32);
@@ -1662,7 +1663,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TLogicalElementHeaderZLib.Create(Loader: GSFile);
+constructor TLogicalElementHeaderZLib.Create(Loader: TCoreLoader);
 begin
   CompressionFlag := Loader.Read32;
   CompressedDataLength := Loader.Read32;
@@ -1671,7 +1672,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TElementHeader.Create(Loader: GSFile);
+constructor TElementHeader.Create(Loader: TCoreLoader);
 begin
   ElementLength := Loader.Read32;
   ObjectTypeID := Loader.ReadGUID;
@@ -1691,7 +1692,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TDataSegment.Create(Loader: GSFile; Offset: Int64);
+constructor TDataSegment.Create(Loader: TCoreLoader; Offset: Int64);
 var
   ElementHeaderZLib: TLogicalElementHeaderZLib;
   UncompressedSize: Cardinal;
@@ -1771,7 +1772,7 @@ begin
     Result := 0;
 end;
 
-constructor TBaseNodeElement.Create(Loader: GSFile);
+constructor TBaseNodeElement.Create(Loader: TCoreLoader);
 var
   i: Integer;
 begin
@@ -1834,7 +1835,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TPartitionNodeElement.Create(Loader: GSFile);
+constructor TPartitionNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1867,7 +1868,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TMetaDataNodeElement.Create(Loader: GSFile);
+constructor TMetaDataNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1880,7 +1881,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TGroupNodeElement.Create(Loader: GSFile);
+constructor TGroupNodeElement.Create(Loader: TCoreLoader);
 var
   i: Integer;
 begin
@@ -1900,7 +1901,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TInstanceNodeElement.Create(Loader: GSFile);
+constructor TInstanceNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1914,7 +1915,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TPartNodeElement.Create(Loader: GSFile);
+constructor TPartNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1929,7 +1930,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TLODNodeElement.Create(Loader: GSFile);
+constructor TLODNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1948,7 +1949,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TRangeLODNodeElement.Create(Loader: GSFile);
+constructor TRangeLODNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1964,7 +1965,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TSwitchNodeElement.Create(Loader: GSFile);
+constructor TSwitchNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1978,7 +1979,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TBaseShapeNodeElement.Create(Loader: GSFile);
+constructor TBaseShapeNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -1998,7 +1999,7 @@ begin
   CompressionLevel := Loader.ReadF32;
 end;
 
-constructor TVertexShapeNodeElement.Create(Loader: GSFile);
+constructor TVertexShapeNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -2025,12 +2026,12 @@ begin
     VertexBinding := Loader.Read64;
 end;
 
-constructor TTriStripSetShapeNodeElement.Create(Loader: GSFile);
+constructor TTriStripSetShapeNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 end;
 
-constructor TPolylineSetShapeNodeElement.Create(Loader: GSFile);
+constructor TPolylineSetShapeNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -2046,7 +2047,7 @@ begin
     VertexBindings := Loader.Read64;
 end;
 
-constructor TPointSetShapeNodeElement.Create(Loader: GSFile);
+constructor TPointSetShapeNodeElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -2064,7 +2065,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TBaseAttributeElement.Create(Loader: GSFile);
+constructor TBaseAttributeElement.Create(Loader: TCoreLoader);
 begin
   NodeType := ntAttribute;
 
@@ -2086,7 +2087,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TMaterialAttributeElement.Create(Loader: GSFile);
+constructor TMaterialAttributeElement.Create(Loader: TCoreLoader);
 var
   AValue: Single;
 begin
@@ -2136,7 +2137,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TGeometricTransformAttributeElement.Create(Loader: GSFile);
+constructor TGeometricTransformAttributeElement.Create(Loader: TCoreLoader);
 var
   i: Integer;
   M: TMatrix;
@@ -2169,7 +2170,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TBasePropertyAtomElement.Create(Loader: GSFile);
+constructor TBasePropertyAtomElement.Create(Loader: TCoreLoader);
 begin
   NodeType := ntProperty;
 
@@ -2185,7 +2186,7 @@ begin
   StateFlags := Loader.Read32;
 end;
 
-constructor TStringPropertyAtomElement.Create(Loader: GSFile);
+constructor TStringPropertyAtomElement.Create(Loader: TCoreLoader);
 begin
   inherited;
 
@@ -2198,7 +2199,7 @@ begin
   Value := Loader.ReadString;
 end;
 
-constructor TIntegerPropertyAtomElement.Create(Loader: GSFile);
+constructor TIntegerPropertyAtomElement.Create(Loader: TCoreLoader);
 begin
   inherited;
 
@@ -2211,7 +2212,7 @@ begin
   Value := Loader.Read32;
 end;
 
-constructor TFloatingPointPropertyAtomElement.Create(Loader: GSFile);
+constructor TFloatingPointPropertyAtomElement.Create(Loader: TCoreLoader);
 begin
   inherited;
 
@@ -2224,7 +2225,7 @@ begin
   Value := Loader.ReadF32;
 end;
 
-constructor TObjectReferencePropertyAtomElement.Create(Loader: GSFile);
+constructor TObjectReferencePropertyAtomElement.Create(Loader: TCoreLoader);
 begin
   inherited;
 
@@ -2237,7 +2238,7 @@ begin
   ReferenceID := Loader.Read32;
 end;
 
-constructor TDatePropertyAtomElement.Create(Loader: GSFile);
+constructor TDatePropertyAtomElement.Create(Loader: TCoreLoader);
 var
   AYear, AMonth, ADay, AHour, AMinute, ASecond: Integer;
 begin
@@ -2259,7 +2260,7 @@ begin
   Date := EncodeDateTime(AYear, AMonth, ADay, AHour, AMinute, ASecond, 0);
 end;
 
-constructor TLateLoadedPropertyAtomElement.Create(Loader: GSFile);
+constructor TLateLoadedPropertyAtomElement.Create(Loader: TCoreLoader);
 begin
   inherited;
 
@@ -2283,7 +2284,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TPropertyTable.Create(Loader: GSFile);
+constructor TPropertyTable.Create(Loader: TCoreLoader);
 var
   i: Integer;
   AKey: Integer;
@@ -2331,7 +2332,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TLSGSegment.Create(Loader: GSFile; Offset: Int64);
+constructor TLSGSegment.Create(Loader: TCoreLoader; Offset: Int64);
 var
   ABaseElementClass: TBaseElementClass;
   AElement: TBaseElement;
@@ -2550,7 +2551,7 @@ end;
 
 //==============================================================================
 
-constructor TBaseShapeLODElement.Create(Loader: GSFile);
+constructor TBaseShapeLODElement.Create(Loader: TCoreLoader);
 begin
   if ((Loader.FileVersion >= 9.0) and (Loader.FileVersion < 10.0)) then
     VersionNumber := Loader.Read16
@@ -2561,7 +2562,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TVertexShapeLODElement.Create(Loader: GSFile);
+constructor TVertexShapeLODElement.Create(Loader: TCoreLoader);
 var
   AElementHeader: TElementHeader;
 begin
@@ -2608,7 +2609,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TTriStripSetShapeLODElement.Create(Loader: GSFile);
+constructor TTriStripSetShapeLODElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -2635,7 +2636,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TPolyLineSetShapeLODElement.Create(Loader: GSFile);
+constructor TPolyLineSetShapeLODElement.Create(Loader: TCoreLoader);
 begin
   inherited Create(Loader);
 
@@ -2653,7 +2654,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TShapeLODSegment.Create(Loader: GSFile; Offset: Int64);
+constructor TShapeLODSegment.Create(Loader: TCoreLoader; Offset: Int64);
 var
   ABaseElementClass: TBaseElementClass;
   ANodeType: TNodeType;
@@ -2678,7 +2679,7 @@ end;
 
 //==============================================================================
 
-constructor TTOCEntry.Create(Loader: GSFile);
+constructor TTOCEntry.Create(Loader: TCoreLoader);
 begin
   SegmentID := Loader.ReadGUID;
   if Loader.FileVersion < 10.0 then
@@ -2699,7 +2700,7 @@ end;
 
 //------------------------------------------------------------------------------
 
-constructor TFileHeader.Create(Loader: GSFile; var AVersion: Single);
+constructor TFileHeader.Create(Loader: TCoreLoader; var AVersion: Single);
 var
   VersionPos: Integer;
   VersionStr: string;
@@ -2723,12 +2724,12 @@ begin
   if (CompareMem(@Loader.ByteBuffer.Buffer[75], @JTValidityBytes[0], 5) = False) then
   begin
     if (CompareMem(@Loader.ByteBuffer.Buffer[0], @JTValidityText[0], 7) = False) then
-      raise Exception.Create('Kein gültiges JT-File. Der Vorgang wird beendet.')
+      raise Exception.Create('Kein gÃ¼ltiges JT-File. Der Vorgang wird beendet.')
   end;
 
   Loader.ByteBuffer.Position := Loader.ByteBuffer.Position + 80;
   if (AVersion < 8.0) or (AVersion >= 11.0) then
-    raise Exception.Create('Version ' + FloatToStrF(AVersion, ffFixed, 2, 1) + ' wird nicht unterstützt.');
+    raise Exception.Create('Version ' + FloatToStrF(AVersion, ffFixed, 2, 1) + ' wird nicht unterstÃ¼tzt.');
 
   ByteOrder := Loader.Read8;  // 0 = Least Significant byte first (Delphi-Default) | 1 = Most Significant byte first (Swapping required)
   if ByteOrder = 0 then
