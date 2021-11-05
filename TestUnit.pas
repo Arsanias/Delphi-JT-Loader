@@ -66,7 +66,7 @@ implementation
   {$R *.dfm}
 
 uses
-  JTFormat, JTCodec, JTMesh, Core.ByteReader, GSLoader;
+  JTFormat, JTCodec, JTMesh, Core.ByteReader, Core.Loader;
 
 procedure TForm1.AtomGridDblClick(Sender: TObject);
 var
