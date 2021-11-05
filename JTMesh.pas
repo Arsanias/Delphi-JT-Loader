@@ -12,7 +12,8 @@ uses
   System.Classes, System.Math,
   Vcl.Dialogs,
   Generics.Defaults, Generics.Collections,
-  Core.Types, Core.Utils, Core.ByteReader, GSLoader, JTFormat;
+  Core.Types, Core.Utils, Core.ByteReader, Core.Loader,
+  JTFormat;
 
 type
   TBitVector = class(TList<Cardinal>)
