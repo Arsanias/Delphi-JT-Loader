@@ -5,3 +5,14 @@ The following classes and records can be used to load the complex Siemens JT Fil
 I have tested the format with JT Versions 8.1 up to 10.5 with success. However. You need some units from my other project "CORE Engine" to be able to fully use these units here. You can find those at 
 
 https://github.com/Arsanias/Delphi-Core-Engine
+
+## System Requirements
+
+Windows x86 Computer
+DirectX or OpenGL compatible Graphics Card
+
+## Current Issues
+
+* The loader units are powerful enough to let you read any of the JT segments. However, the example units just show you how to read the solid CAD mesh. Properties are ignored. However. You may have a look at the attached JT Specifications for further info about what kind of info can be foundin which segment.
+* The Test Project merely loads a file but does not automatically display it. You have to expand each branch and double-click the related solid to display it. Each double-click, adds a further solid/mesh to the scene.
+* The Siemens JT Specification does not show you how exactly the solid hierarchy has to be build in a tree. It is a painful process to create the correct hierarchy. I made some trials to find the best setup. However. If you should detect an error and have a proposal for an improvement, then just put me a message.
