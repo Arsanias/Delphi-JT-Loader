@@ -8,8 +8,8 @@ https://github.com/Arsanias/Delphi-Core-Engine
 
 ## System Requirements
 
-Windows x86 Computer
-DirectX or OpenGL compatible Graphics Card
+* Windows x86 Computer
+* DirectX or OpenGL compatible Graphics Card
 
 ## Current Issues
 
