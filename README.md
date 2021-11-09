@@ -14,5 +14,5 @@ https://github.com/Arsanias/Delphi-Core-Engine
 ## Current Issues
 
 * The loader units are powerful enough to let you read any of the JT segments. However, the example units just show you how to read the solid CAD mesh. Properties are ignored. You may have a look at the attached JT Specifications for further info about what kind of data can be found in which segment.
-* The Test Project merely loads a file but does not automatically display it. You have to expand each branch and double-click the related solid to display it. Each double-click, adds a further solid/mesh to the scene.
+* The Test Project merely loads a file but does not automatically display it. You have to expand each branch and double-click the related solid to display it. Each solid has to individually activated with a double-click to be visible on the scene.
 * The Siemens JT Specification does not show you how exactly the solid hierarchy has to be build in a tree. It is a painful process to create the correct hierarchy. I made some trials to find the best setup. However. If you should detect an error and have a proposal for an improvement, then just put me a message.
