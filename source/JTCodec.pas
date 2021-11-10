@@ -1,4 +1,6 @@
 // Copyright (c) 2021 Arsanias (arsaniasbb@gmail.com)
+// The codecs are based on the examples of Siemens JT Specification. 
+
 // Distributed under the MIT software license, see the accompanying
 // file LICENSE or http://www.opensource.org/licenses/mit-license.php.
 
@@ -386,8 +388,8 @@ var
   i: Integer;
 begin
   // key := treeMap.higherKey(rescaledCode - 1); // HigherKey function does not exist
-  // {OPTIMIZE} - Hier wurde eine Funktion implementiert, die den nächsten Key zu
-  // des übergebenen Parameters - 1 findet. Dazu müssen die Keys in ein Array kopiert
+  // {OPTIMIZE} - Hier wurde eine Funktion implementiert, die den nÃ¤chsten Key zu
+  // des Ã¼bergebenen Parameters - 1 findet. Dazu mÃ¼ssen die Keys in ein Array kopiert
   // sortiert und dann darin gesucht werden. "HIGHER-KEY"-Funktion existiert in Delphi leider nicht
 
   AKeyArray := KeyArray[AContextIndex];
