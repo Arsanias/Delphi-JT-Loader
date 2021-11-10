@@ -17,3 +17,7 @@ https://github.com/Arsanias/Delphi-Core-Engine
 * The Test Project merely loads a file but does not automatically display it. You have to expand each branch and double-click the related solid to display it. Each solid has to individually activated with a double-click to be visible on the scene.
 * The Siemens JT Specification does not show you how exactly the solid hierarchy has to be build in a tree. It is a painful process to create the correct hierarchy. I made some trials to find the best setup. However. If you should detect an error and have a proposal for an improvement, then just put me a message.
 * On complex models with various instances of the same Mesh, each instance has a different position or orientation. The matrix for that transformation is stored inside the structure and can be loaded. Unfortunately I had no time to complete this, so you have to do it yourself (or load only simple models). :)
+
+## History
+
+2021-11-09 Initial upload to GitHub
